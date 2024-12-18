@@ -182,6 +182,7 @@ static inline void _bitcpy_not_same_offset(uint8_t* dst,
         dst += 8;
         src += 8;
     }
+    assert(bitlen < 64);
     if (bitlen >= 32) {
         dst[0] = (src[0] << src_offset) | (src[1] >> (8 - src_offset));
         dst[1] = (src[1] << src_offset) | (src[2] >> (8 - src_offset));
@@ -191,6 +192,7 @@ static inline void _bitcpy_not_same_offset(uint8_t* dst,
         dst += 4;
         src += 4;
     }
+    assert(bitlen < 32);
     if (bitlen >= 16) {
         dst[0] = (src[0] << src_offset) | (src[1] >> (8 - src_offset));
         dst[1] = (src[1] << src_offset) | (src[2] >> (8 - src_offset));
@@ -198,41 +200,34 @@ static inline void _bitcpy_not_same_offset(uint8_t* dst,
         dst += 2;
         src += 2;
     }
-    while (bitlen >= 8) {
+    assert(bitlen < 16);
+    if (bitlen >= 8) {
         dst[0] = (src[0] << src_offset) | (src[1] >> (8 - src_offset));
         bitlen -= 8;
         dst += 1;
         src += 1;
     }
+    assert(bitlen < 8);
     if (bitlen) {
         let src_mask = _get_uint8_mask(0, bitlen);
         dst[0] = (dst[0] & ~src_mask) |
                  (((src[0] << src_offset) | (src[1] >> (8 - src_offset))) &
                   src_mask);
-        assert(bitlen < 8);
     }
 }
 
-void bitcpy(void* _dst,
+void bitcpy(void* dst,
             size_t dst_offset,
-            void const* _src,
+            void const* src,
             size_t src_offset,
             size_t bitlen) {
-    uint8_t* dst = (uint8_t*)_dst;
-    uint8_t const* src = (uint8_t const*)_src;
-
     dst += dst_offset >> 3;
     src += src_offset >> 3;
-    dst_offset &= 7;
-    src_offset &= 7;
+    dst_offset &= 7U;
+    src_offset &= 7U;
 
     if (dst_offset == src_offset) {
-        return _bitcpy_same_offset(dst, src, dst_offset, bitlen);
-    } else {
-        return _bitcpy_not_same_offset(dst,
-                                       dst_offset,
-                                       src,
-                                       src_offset,
-                                       bitlen);
+        return _bitcpy_same_offset(dst, src, src_offset, bitlen);
     }
+    _bitcpy_not_same_offset(dst, dst_offset, src, src_offset, bitlen);
 }
