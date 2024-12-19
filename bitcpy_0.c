@@ -134,9 +134,7 @@ static __always_inline void _bitcpy_not_same_offset(uint8_t* dst,
         src += src_offset >> 3;
         src_offset &= 7U;
 
-        dst_offset += _bitlen;
-        dst += dst_offset >> 3;
-        dst_offset &= 7U;
+        dst += 1;
     }
     return _bitcpy_dst_offset_0(dst, src, src_offset, bitlen);
 }
